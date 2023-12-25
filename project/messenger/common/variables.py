@@ -2,14 +2,14 @@
 import logging
 
 
-DEFAULT_PORT = 7777                 # Порт поумолчанию для сетевого ваимодействия
+DEFAULT_PORT = 7777                 # Порт по умолчанию для сетевого ваимодействия
 DEFAULT_IP_ADDRESS = '177.0.0.1'    # IP адрес по умолчанию для подключения клиента
 MAX_CONNECTIONS = 5                 # Максимальная очередь подключений
-MAX_PACKAGE_LENGTH = 1024           # Максимальная длинна сообщения в байтах
+MAX_PACKAGE_LENGTH = 1024           # Максимальная длина сообщения в байтах
 ENCODING = 'utf-8'                  # Кодировка проекта
 LOGGING_LEVEL = logging.DEBUG       # Текущий уровень логирования
 
-# Прококол JIM основные ключи:
+# Протокол JIM основные ключи:
 ACTION = 'action'
 TIME = 'time'
 USER = 'user'

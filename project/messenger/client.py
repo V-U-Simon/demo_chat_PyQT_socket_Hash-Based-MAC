@@ -1,27 +1,22 @@
 # client
 
-import sys
-import json
+
 import socket
 import time
-import dis
 import argparse
-import logging
 import threading
-import logs.client_logs_config
 from common.variables import *
 from common.utils import *
 from errors_user import IncorrectDataRecivedError, ReqFieldMissingError, ServerError
 from decos import log
-from metaclasses import ClientVerifier
-from descriptors import Sock
+from metaclasses import ClientMaker
 
 # Инициализация клиентского логера
 logger = logging.getLogger('client')
 
-# Класс формировки и отправки сообщений на сервер и взаимодействия с пользователем.
-class ClientSender(threading.Thread, metaclass=ClientVerifier):
-    sock = Sock()
+
+# Класс формирования и отправки сообщений на сервер и взаимодействия с пользователем.
+class ClientSender(threading.Thread, metaclass=ClientMaker):
     def __init__(self, account_name, sock):
         self.account_name = account_name
         self.sock = sock
@@ -71,7 +66,7 @@ class ClientSender(threading.Thread, metaclass=ClientVerifier):
                 print('Завершение соединения.')
                 logger.info('Завершение работы по команде пользователя.')
                 # Задержка неоходима, чтобы успело уйти сообщение о выходе
-                time.sleep(1)
+                time.sleep(0.5)
                 break
             else:
                 print('Команда не распознана, попробойте снова. help - вывести поддерживаемые команды.')
@@ -85,8 +80,7 @@ class ClientSender(threading.Thread, metaclass=ClientVerifier):
 
 
 # Класс-приёмник сообщений с сервера. Принимает сообщения, выводит в консоль.
-class ClientReader(threading.Thread , metaclass=ClientVerifier):
-    sock = Sock()
+class ClientReader(threading.Thread, metaclass=ClientMaker):
     def __init__(self, account_name, sock):
         self.account_name = account_name
         self.sock = sock
@@ -173,8 +167,8 @@ def main():
         print(f'Клиентский модуль запущен с именем: {client_name}')
 
     logger.info(
-        f'Запущен клиент с парамертами: адрес сервера: {server_address} , порт: {server_port}, '
-        f'имя пользователя: {client_name}')
+        f'Запущен клиент с парамертами: адрес сервера: {server_address} , порт: {server_port}, имя пользователя: '
+        f'{client_name}')
 
     # Инициализация сокета и сообщение серверу о нашем появлении
     try:
@@ -195,17 +189,16 @@ def main():
         exit(1)
     except (ConnectionRefusedError, ConnectionError):
         logger.critical(
-            f'Не удалось подключиться к серверу {server_address}:{server_port}, конечный компьютер отверг запрос '
-            f'на подключение.')
+            f'Не удалось подключиться к серверу {server_address}:{server_port}, конечный компьютер отверг запрос на подключение.')
         exit(1)
     else:
         # Если соединение с сервером установлено корректно, запускаем клиенский процесс приёма сообщний
-        module_reciver = ClientReader(client_name , transport)
+        module_reciver = ClientReader(client_name, transport)
         module_reciver.daemon = True
         module_reciver.start()
 
         # затем запускаем отправку сообщений и взаимодействие с пользователем.
-        module_sender = ClientSender(client_name , transport)
+        module_sender = ClientSender(client_name, transport)
         module_sender.daemon = True
         module_sender.start()
         logger.debug('Запущены процессы')
