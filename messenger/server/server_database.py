@@ -314,6 +314,32 @@ class ServerStorage:
         # Возвращаем список кортежей
         return query.all()
 
+    def add_user(self, username, last_login=None):
+        """
+        Добавляет нового пользователя в базу данных.
+        :param username: Имя пользователя
+        :param last_login: Последнее время входа (datetime object), если есть
+        """
+        try:
+            # Проверяем, существует ли уже такой пользователь
+            if not self.check_user(username):
+                # Если нет, то добавляем нового пользователя
+                new_user = self.AllUsers(username)
+                # Устанавливаем время последнего входа
+                new_user.last_login = (
+                    last_login if last_login else datetime.datetime.now()
+                )
+
+                self.session.add(new_user)  # Добавляем нового пользователя в сессию
+                self.session.commit()  # Фиксируем изменения в базе данных
+                return True  # Успешно добавлен
+            else:
+                return False  # Пользователь уже существует
+        except Exception as e:
+            print(f"Ошибка добавления пользователя {username}: {e}")
+            self.session.rollback()  # Откатываем изменения в случае ошибки
+            return False  # В случае ошибки
+
 
 # Отладка
 if __name__ == "__main__":

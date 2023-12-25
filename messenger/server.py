@@ -39,7 +39,7 @@ def config_load():
     """Парсер конфигурационного ini файла."""
     config = configparser.ConfigParser()
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    config.read(f"{dir_path}/{'server+++.ini'}")
+    config.read(f"{dir_path}/{'server.ini'}")
     # Если конфиг файл загружен правильно, запускаемся, иначе конфиг по
     # умолчанию.
     if "SETTINGS" in config:
