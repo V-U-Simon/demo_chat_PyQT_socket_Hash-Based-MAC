@@ -8,7 +8,7 @@ from sqlalchemy import (
     MetaData,
     DateTime,
 )
-from sqlalchemy.orm import mapper, sessionmaker
+from sqlalchemy.orm import registry, sessionmaker
 from common.variables import *
 import datetime
 
@@ -48,8 +48,8 @@ class ClientDatabase:
             connect_args={"check_same_thread": False},
         )
 
-        # Создаём объект MetaData
-        self.metadata = MetaData()
+        self.metadata = MetaData()  # Создаём объект MetaData
+        self.registry = registry()  # Создаём экземпляр registry
 
         # Создаём таблицу известных пользователей
         users = Table(
@@ -80,11 +80,14 @@ class ClientDatabase:
 
         # Создаём таблицы
         self.metadata.create_all(self.database_engine)
-
+        # Используем экземпляр registry для маппинга
+        self.registry.map_imperatively(self.KnownUsers, users)
+        self.registry.map_imperatively(self.MessageHistory, history)
+        self.registry.map_imperatively(self.Contacts, contacts)
         # Создаём отображения
-        mapper(self.KnownUsers, users)
-        mapper(self.MessageHistory, history)
-        mapper(self.Contacts, contacts)
+        # mapper(self.KnownUsers, users)
+        # mapper(self.MessageHistory, history)
+        # mapper(self.Contacts, contacts)
 
         # Создаём сессию
         Session = sessionmaker(bind=self.database_engine)
@@ -163,7 +166,7 @@ class ClientDatabase:
 
 # отладка
 if __name__ == "__main__":
-    test_db = ClientDatabase("test1")
+    test_db = ClientDatabase("db_test_client")
     for i in ["test3", "test4", "test5"]:
         test_db.add_contact(i)
     test_db.add_contact("test4")
