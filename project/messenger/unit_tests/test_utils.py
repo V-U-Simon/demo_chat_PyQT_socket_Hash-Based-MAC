@@ -1,10 +1,9 @@
 import sys
-
-sys.path.append("../")
-from messanger.common.utils import *
-from messanger.common.variables import *
+sys.path.append('../')
+from common.utils import *
+from common.variables import *
 import unittest
-from messanger.errors_user import NonDictInputError
+from errors import NonDictInputError
 
 
 # Тестовый класс для тестирования отпраки и получения, при создании требует словарь, который будет прогонятся
@@ -29,10 +28,15 @@ class Tests(unittest.TestCase):
     test_dict_send = {
         ACTION: PRESENCE,
         TIME: 111111.111111,
-        USER: {ACCOUNT_NAME: "test_test"},
+        USER: {
+            ACCOUNT_NAME: 'test_test'
+        }
     }
     test_dict_recv_ok = {RESPONSE: 200}
-    test_dict_recv_err = {RESPONSE: 400, ERROR: "Bad Request"}
+    test_dict_recv_err = {
+        RESPONSE: 400,
+        ERROR: 'Bad Request'
+    }
 
     # тестируем корректность работы фукции отправки,создадим тестовый сокет и проверим корректность отправки словаря
     def test_send_message(self):
@@ -55,5 +59,5 @@ class Tests(unittest.TestCase):
         self.assertEqual(get_message(test_sock_err), self.test_dict_recv_err)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()
