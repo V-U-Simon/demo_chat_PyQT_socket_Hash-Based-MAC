@@ -66,7 +66,8 @@ if __name__ == '__main__':
         if start_dialog.ok_pressed:
             client_name = start_dialog.client_name.text()
             client_passwd = start_dialog.client_passwd.text()
-            logger.debug(f'Using USERNAME = {client_name}, PASSWD = {client_passwd}.')
+            logger.debug(
+                f'Using USERNAME = {client_name}, PASSWD = {client_passwd}.')
         else:
             exit(0)
 

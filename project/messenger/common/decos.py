@@ -1,10 +1,10 @@
+import messanger.logs.server_logs_config
+import messanger.logs.client_logs_config
 import socket
 import logging
 import sys
 
 sys.path.append("../")
-import messanger.logs.client_logs_config
-import messanger.logs.server_logs_config
 
 
 # метод определения модуля, источника запуска.
@@ -48,8 +48,8 @@ def login_required(func):
     def checker(*args, **kwargs):
         # проверяем, что первый аргумент - экземпляр MessageProcessor
         # Импортить необходимо тут, иначе ошибка рекурсивного импорта.
-        from server.core import MessageProcessor
-        from common.variables import ACTION, PRESENCE
+        from messanger.server.core import MessageProcessor
+        from messanger.common.variables import ACTION, PRESENCE
 
         if isinstance(args[0], MessageProcessor):
             found = False

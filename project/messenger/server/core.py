@@ -1,3 +1,8 @@
+from messanger.common.decos import login_required
+from messanger.common.utils import send_message, get_message
+from messanger.common.variables import *
+from messanger.common.descriptors import Port
+from messanger.common.metaclasses import ServerMaker
 import threading
 import logging
 import select
@@ -9,11 +14,6 @@ import os
 import sys
 
 sys.path.append("../")
-from messanger.common.metaclasses import ServerMaker
-from messanger.common.descriptors import Port
-from messanger.common.variables import *
-from messanger.common.utils import send_message, get_message
-from messanger.common.decos import login_required
 
 # Загрузка логера
 logger = logging.getLogger("server")

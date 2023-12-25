@@ -10,7 +10,8 @@ import os
 def gui_create_model(database):
     list_users = database.active_users_list()
     list_table = QStandardItemModel()
-    list_table.setHorizontalHeaderLabels(['Имя Клиента', 'IP Адрес', 'Порт', 'Время подключения'])
+    list_table.setHorizontalHeaderLabels(
+        ['Имя Клиента', 'IP Адрес', 'Порт', 'Время подключения'])
     for row in list_users:
         user, ip, port, time = row
         user = QStandardItem(user)
@@ -187,7 +188,8 @@ class ConfigWindow(QDialog):
         self.ip_label.setFixedSize(180, 15)
 
         # Метка с напоминанием о пустом поле.
-        self.ip_label_note = QLabel(' оставьте это поле пустым, чтобы\n принимать соединения с любых адресов.', self)
+        self.ip_label_note = QLabel(
+            ' оставьте это поле пустым, чтобы\n принимать соединения с любых адресов.', self)
         self.ip_label_note.move(10, 168)
         self.ip_label_note.setFixedSize(500, 30)
 
@@ -213,7 +215,8 @@ if __name__ == '__main__':
     main_window = MainWindow()
     main_window.statusBar().showMessage('Test Statusbar Message')
     test_list = QStandardItemModel(main_window)
-    test_list.setHorizontalHeaderLabels(['Имя Клиента', 'IP Адрес', 'Порт', 'Время подключения'])
+    test_list.setHorizontalHeaderLabels(
+        ['Имя Клиента', 'IP Адрес', 'Порт', 'Время подключения'])
     test_list.appendRow(
         [QStandardItem('test1'), QStandardItem('192.198.0.5'), QStandardItem('23544'), QStandardItem('16:20:34')])
     test_list.appendRow(
