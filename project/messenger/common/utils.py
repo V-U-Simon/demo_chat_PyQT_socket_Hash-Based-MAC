@@ -1,24 +1,36 @@
 """Утилиты"""
 
+from messanger.common.variables import *
+from messanger.errors_user import IncorrectDataRecivedError, NonDictInputError
 import json
-from messenger.common.variables import MAX_PACKAGE_LENGTH, ENCODING
-from messenger.decos import Log
+import sys
+
+sys.path.append("../")
+from messanger.decorators import log
 
 
-@Log()
-def get_message(socket):
-    response_encoded = socket.recv(MAX_PACKAGE_LENGTH)
-    if isinstance(response_encoded, bytes):
-        response_json = response_encoded.decode(ENCODING)
-        response = json.loads(response_json)
+# Утилита приёма и декодирования сообщения
+# принимает байты выдаёт словарь, если приняточто-то другое отдаёт ошибку значения
+@log
+def get_message(client):
+    encoded_response = client.recv(MAX_PACKAGE_LENGTH)
+    if isinstance(encoded_response, bytes):
+        json_response = encoded_response.decode(ENCODING)
+        response = json.loads(json_response)
         if isinstance(response, dict):
             return response
-        raise ValueError
-    raise ValueError
+        else:
+            raise IncorrectDataRecivedError
+    else:
+        raise IncorrectDataRecivedError
 
 
-@Log()
-def send_message(socket, message):
-    message_json = json.dumps(message)
-    message_encoded = message_json.encode(ENCODING)
-    socket.send(message_encoded)
+# Утилита кодирования и отправки сообщения
+# принимает словарь и отправляет его
+@log
+def send_message(sock, message):
+    if not isinstance(message, dict):
+        raise NonDictInputError
+    js_message = json.dumps(message)
+    encoded_message = js_message.encode(ENCODING)
+    sock.send(encoded_message)
