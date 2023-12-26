@@ -13,19 +13,7 @@ from common.variables import *
 import datetime
 
 
-# Класс - серверная база данных:
 class ServerStorage:
-    def check_user(self, username):
-        """
-        Проверяет, существует ли пользователь с данным именем username.
-        """
-        try:
-            # Если пользователь существует, query.first() вернет не None
-            user = self.session.query(self.AllUsers).filter_by(name=username).first()
-            return user is not None
-        except:
-            return False  # В случае ошибки запроса, считаем что пользователь не найден
-
     # Класс - отображение таблицы всех пользователей
     class AllUsers:
         def __init__(self, username):
@@ -138,11 +126,6 @@ class ServerStorage:
         self.registry.map_imperatively(self.LoginHistory, user_login_history)
         self.registry.map_imperatively(self.UsersContacts, contacts)
         self.registry.map_imperatively(self.UsersHistory, users_history_table)
-        # mapper(self.AllUsers, users_table)
-        # mapper(self.ActiveUsers, active_users_table)
-        # mapper(self.LoginHistory, user_login_history)
-        # mapper(self.UsersContacts, contacts)
-        # mapper(self.UsersHistory, users_history_table)
 
         # Создаём сессию
         Session = sessionmaker(bind=self.database_engine)
@@ -340,19 +323,13 @@ class ServerStorage:
             self.session.rollback()  # Откатываем изменения в случае ошибки
             return False  # В случае ошибки
 
-
-# Отладка
-if __name__ == "__main__":
-    test_db = ServerStorage("db_test_server.db3")
-    test_db.user_login("1111", "192.168.1.113", 8080)
-    test_db.user_login("McG2", "192.168.1.113", 8081)
-    print(test_db.users_list())
-    print(test_db.active_users_list())
-    test_db.user_logout("McG2")
-    print(test_db.login_history("re"))
-    test_db.add_contact("test2", "test1")
-    test_db.add_contact("test1", "test3")
-    test_db.add_contact("test1", "test6")
-    test_db.remove_contact("test1", "test3")
-    test_db.process_message("McG2", "1111")
-    print(test_db.message_history())
+    def check_user(self, username):
+        """
+        Проверяет, существует ли пользователь с данным именем username.
+        """
+        try:
+            # Если пользователь существует, query.first() вернет не None
+            user = self.session.query(self.AllUsers).filter_by(name=username).first()
+            return user is not None
+        except:
+            return False  # В случае ошибки запроса, считаем что пользователь не найден
