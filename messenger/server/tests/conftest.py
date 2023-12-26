@@ -27,5 +27,5 @@ def session(test_engine):
 
 # Фикстура для ServerStorage
 @pytest.fixture(scope="function")
-def server_storage(session):
+def storage(session):
     return ServerStorage(session.bind)
