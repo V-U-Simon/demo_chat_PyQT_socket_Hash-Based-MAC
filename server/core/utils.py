@@ -7,7 +7,7 @@ sys.path.append("../")
 # from common.decos import log
 from logs.logger import log
 
-from common.variables import *
+from core.variables import *
 
 
 # Утилита приёма и декодирования сообщения

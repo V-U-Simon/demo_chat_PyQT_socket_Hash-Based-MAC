@@ -1,8 +1,8 @@
-from common.decos import login_required
-from common.utils import send_message, get_message
-from common.variables import *
-from common.decos import Port
-from common.metaclasses import ServerMaker
+from core.decos import login_required
+from core.utils import send_message, get_message
+from core.variables import *
+from core.decos import Port
+from core.metaclasses import ServerMaker
 import threading
 import logging
 import select

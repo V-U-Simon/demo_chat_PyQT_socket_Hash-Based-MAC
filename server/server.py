@@ -5,8 +5,8 @@ import argparse
 import configparser
 
 
-from common.variables import *
-from common.utils import *
+from core.variables import *
+from core.utils import *
 
 
 from core.core import MessageProcessor
