@@ -3,14 +3,8 @@ import datetime
 import hashlib
 import binascii
 
-from database import metadata, engine
-from database import (
-    Users,
-    ActiveUsers,
-    UsersHistory,
-    LoginHistory,
-    Contacts,
-)
+from db import metadata, engine
+from db import Users, ActiveUsers, UsersHistory, LoginHistory, Contacts
 
 
 class Storage:

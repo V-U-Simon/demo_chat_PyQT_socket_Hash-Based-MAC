@@ -4,8 +4,10 @@ import json
 import sys
 
 sys.path.append("../")
-from common.decos import log
-from common.variables import *
+
+
+from logs.logger import log
+from core.variables import *
 
 
 # Утилита приёма и декодирования сообщения

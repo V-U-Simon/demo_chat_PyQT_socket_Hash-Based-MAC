@@ -4,23 +4,16 @@ import argparse
 
 import configparser
 
-
-from core.variables import *
-from core.utils import *
-
-
 from core.core import MessageProcessor
-from database import Storage
-from gui.main_window import MainWindow
+from core.utils import *
+from core.variables import *
+from db import Storage
+
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
+from gui.main_window import MainWindow
 
 from logs.logger import logger, log
-
-# Инициализация логирования сервера.
-# from common.decos import log
-# import logs.logger_config
-# logger = logging.getLogger("server")
 
 
 @log

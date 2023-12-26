@@ -1,7 +1,7 @@
 import pytest
 import datetime
 
-from database import Users, UsersHistory
+from db import Users, UsersHistory
 
 
 @pytest.mark.only

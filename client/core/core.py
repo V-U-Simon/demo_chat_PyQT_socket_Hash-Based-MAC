@@ -10,9 +10,9 @@ import binascii
 from PyQt5.QtCore import pyqtSignal, QObject
 
 sys.path.append("../")
-from common.utils import *
-from common.variables import *
-from common.errors_user import ServerError
+from core.utils import *
+from core.variables import *
+from core.errors_user import ServerError
 
 # Логер и объект блокировки для работы с сокетом.
 logger = logging.getLogger("client")
@@ -92,7 +92,7 @@ class ClientTransport(threading.Thread, QObject):
 
         logger.debug("Starting auth dialog.")
 
-        # Запускаем процедуру авторизации
+        # начинаем процедуру авторизации
         # Получаем хэш пароля
         passwd_bytes = self.password.encode("utf-8")
         salt = self.username.lower().encode("utf-8")
@@ -125,9 +125,7 @@ class ClientTransport(threading.Thread, QObject):
                         # Если всё нормально, то продолжаем процедуру
                         # авторизации.
                         ans_data = ans[DATA]
-                        hash = hmac.new(
-                            passwd_hash_string, ans_data.encode("utf-8"), "MD5"
-                        )
+                        hash = hmac.new(passwd_hash_string, ans_data.encode("utf-8"), "MD5")
                         digest = hash.digest()
                         my_ans = RESPONSE_511
                         my_ans[DATA] = binascii.b2a_base64(digest).decode("ascii")
@@ -152,9 +150,7 @@ class ClientTransport(threading.Thread, QObject):
                 self.contacts_list_update()
                 self.message_205.emit()
             else:
-                logger.error(
-                    f"Принят неизвестный код подтверждения {message[RESPONSE]}"
-                )
+                logger.error(f"Принят неизвестный код подтверждения {message[RESPONSE]}")
 
         # Если это сообщение от пользователя добавляем в базу, даём сигнал о
         # новом сообщении
@@ -166,9 +162,7 @@ class ClientTransport(threading.Thread, QObject):
             and MESSAGE_TEXT in message
             and message[DESTINATION] == self.username
         ):
-            logger.debug(
-                f"Получено сообщение от пользователя {message[SENDER]}:{message[MESSAGE_TEXT]}"
-            )
+            logger.debug(f"Получено сообщение от пользователя {message[SENDER]}:{message[MESSAGE_TEXT]}")
             self.new_message.emit(message)
 
     def contacts_list_update(self):

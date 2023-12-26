@@ -1,38 +1,4 @@
-import logs.client_logs_config
-import logs.logger
 import socket
-import logging
-import sys
-
-sys.path.append("../")
-
-
-# метод определения модуля, источника запуска.
-if sys.argv[0].find("client") == -1:
-    # если не клиент то сервер!
-    logger = logging.getLogger("server")
-else:
-    # иначе сервер
-    logger = logging.getLogger("client")
-
-
-def log(func_to_log):
-    """
-    Декоратор, выполняющий логирование вызовов функций.
-    Сохраняет события типа debug, содержащие
-    информацию о имени вызываемой функиции, параметры с которыми
-    вызывается функция, и модуль, вызывающий функцию.
-    """
-
-    def log_saver(*args, **kwargs):
-        logger.debug(
-            f"Была вызвана функция {func_to_log.__name__} c параметрами {args} , {kwargs}. "
-            f"Вызов из модуля {func_to_log.__module__}"
-        )
-        ret = func_to_log(*args, **kwargs)
-        return ret
-
-    return log_saver
 
 
 def login_required(func):
@@ -49,7 +15,7 @@ def login_required(func):
         # проверяем, что первый аргумент - экземпляр MessageProcessor
         # Импортить необходимо тут, иначе ошибка рекурсивного импорта.
         from server.core.core import MessageProcessor
-        from common.variables import ACTION, PRESENCE
+        from core.variables import ACTION, PRESENCE
 
         if isinstance(args[0], MessageProcessor):
             found = False

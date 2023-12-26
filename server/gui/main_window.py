@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QLabel, QT
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import QTimer
 from core.core import MessageProcessor
-from database import storage
+from db import storage
 
 # from stat_window import StatWindow
 from .stat_window import StatWindow

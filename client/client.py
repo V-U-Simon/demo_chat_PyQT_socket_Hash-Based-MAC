@@ -1,24 +1,17 @@
-import logging
-import logs.client_logs_config
 import argparse
 import sys
 import os
 
-from Cryptodome.PublicKey import RSA
-
+from core.core import ClientTransport
+from core.variables import *
+from core.errors_user import ServerError
+from db import Storage
 
 from PyQt5.QtWidgets import QApplication, QMessageBox
 
-from common.variables import *
-from common.errors_user import ServerError
-from common.decos import log
-from client.client_database import ClientDatabase
-from client.transport import ClientTransport
-from client.main_window import ClientMainWindow
-from client.start_dialog import UserNameDialog
 
-# Инициализация клиентского логера
-logger = logging.getLogger("client")
+from logs.logger import logger, log
+from Cryptodome.PublicKey import RSA
 
 
 # Парсер аргументов коммандной строки
@@ -51,8 +44,11 @@ def arg_parser():
     return server_address, server_port, client_name, client_passwd
 
 
-# Основная функция клиента
-if __name__ == "__main__":
+@log
+def main():
+    from gui.main_window import ClientMainWindow
+    from gui.start_dialog import UserNameDialog
+
     # Загружаем параметы коммандной строки
     server_address, server_port, client_name, client_passwd = arg_parser()
     logger.debug("Args loaded")
@@ -93,12 +89,18 @@ if __name__ == "__main__":
     # !!!keys.publickey().export_key()
     logger.debug("Keys successfully loaded.")
     # Создаём объект базы данных
-    database = ClientDatabase(client_name)
+
+    from sqlalchemy import create_engine
+
+    engine = create_engine(
+        f"sqlite:///db_client_{client_name}.db3",
+        echo=False,
+    )
+    db = Storage(engine)
+
     # Создаём объект - транспорт и запускаем транспортный поток
     try:
-        transport = ClientTransport(
-            server_port, server_address, database, client_name, client_passwd, keys
-        )
+        transport = ClientTransport(server_port, server_address, db, client_name, client_passwd, keys)
         logger.debug("Transport ready.")
     except ServerError as error:
         message = QMessageBox()
@@ -111,7 +113,7 @@ if __name__ == "__main__":
     del start_dialog
 
     # Создаём GUI
-    main_window = ClientMainWindow(database, transport, keys)
+    main_window = ClientMainWindow(db, transport, keys)
     main_window.make_connection(transport)
     main_window.setWindowTitle(f"Чат Программа alpha release - {client_name}")
     client_app.exec_()
@@ -119,3 +121,7 @@ if __name__ == "__main__":
     # Раз графическая оболочка закрылась, закрываем транспорт
     transport.transport_shutdown()
     transport.join()
+
+
+if __name__ == "__main__":
+    main()

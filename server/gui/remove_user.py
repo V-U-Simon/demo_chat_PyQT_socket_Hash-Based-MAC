@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QDialog, QLabel, QComboBox, QPushButton, QApplicatio
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from core.core import MessageProcessor
-from database import storage
+from db import storage
 
 
 class DelUserDialog(QDialog):

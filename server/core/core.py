@@ -1,3 +1,4 @@
+import hashlib
 from core.decos import login_required
 from core.utils import send_message, get_message
 from core.variables import *
@@ -12,6 +13,9 @@ import hmac
 import binascii
 import os
 import sys
+
+from db import Storage
+from db.models import Users
 
 sys.path.append("../")
 
@@ -28,13 +32,13 @@ class MessageProcessor(threading.Thread):
 
     port = Port()
 
-    def __init__(self, listen_address, listen_port, database):
+    def __init__(self, listen_address, listen_port, database: Storage):
         # Параметры подключения
         self.addr = listen_address
         self.port = listen_port
 
         # База данных сервера
-        self.database = database
+        self.db = database
 
         # Сокет, через который будет осуществляться работа
         self.sock = None
@@ -103,7 +107,7 @@ class MessageProcessor(threading.Thread):
         logger.info(f"Клиент {client.getpeername()} отключился от сервера.")
         for name in self.names:
             if self.names[name] == client:
-                self.database.user_logout(name)
+                self.db.user_logout(name)
                 del self.names[name]
                 break
         self.clients.remove(client)
@@ -165,7 +169,7 @@ class MessageProcessor(threading.Thread):
             and self.names[message[SENDER]] == client
         ):
             if message[DESTINATION] in self.names:
-                self.database.process_message(message[SENDER], message[DESTINATION])
+                self.db.process_message(message[SENDER], message[DESTINATION])
                 self.process_message(message)
                 try:
                     send_message(client, RESPONSE_200)
@@ -197,7 +201,7 @@ class MessageProcessor(threading.Thread):
             and self.names[message[USER]] == client
         ):
             response = RESPONSE_202
-            response[LIST_INFO] = self.database.get_contacts(message[USER])
+            response[LIST_INFO] = self.db.get_contacts(message[USER])
             try:
                 send_message(client, response)
             except OSError:
@@ -211,7 +215,7 @@ class MessageProcessor(threading.Thread):
             and USER in message
             and self.names[message[USER]] == client
         ):
-            self.database.add_contact(message[USER], message[ACCOUNT_NAME])
+            self.db.add_contact(message[USER], message[ACCOUNT_NAME])
             try:
                 send_message(client, RESPONSE_200)
             except OSError:
@@ -225,7 +229,7 @@ class MessageProcessor(threading.Thread):
             and USER in message
             and self.names[message[USER]] == client
         ):
-            self.database.remove_contact(message[USER], message[ACCOUNT_NAME])
+            self.db.remove_contact(message[USER], message[ACCOUNT_NAME])
             try:
                 send_message(client, RESPONSE_200)
             except OSError:
@@ -239,7 +243,7 @@ class MessageProcessor(threading.Thread):
             and self.names[message[ACCOUNT_NAME]] == client
         ):
             response = RESPONSE_202
-            response[LIST_INFO] = [user[0] for user in self.database.users_list()]
+            response[LIST_INFO] = [user[0] for user in self.db.users_list()]
             try:
                 send_message(client, response)
             except OSError:
@@ -248,7 +252,7 @@ class MessageProcessor(threading.Thread):
         # Если это запрос публичного ключа пользователя
         elif ACTION in message and message[ACTION] == PUBLIC_KEY_REQUEST and ACCOUNT_NAME in message:
             response = RESPONSE_511
-            response[DATA] = self.database.get_pubkey(message[ACCOUNT_NAME])
+            response[DATA] = self.db.get_pubkey(message[ACCOUNT_NAME])
             # может быть, что ключа ещё нет (пользователь никогда не логинился,
             # тогда шлём 400)
             if response[DATA]:
@@ -275,8 +279,9 @@ class MessageProcessor(threading.Thread):
 
     def autorize_user(self, message, sock):
         """Метод реализующий авторизацию пользователей."""
-        # Если имя пользователя уже занято то возвращаем 400
         logger.debug(f"Start auth process for {message[USER]}")
+        # Проверка взаимодействует ли данный пользователь с сервером в настоящий момент
+        # если да, то подлкючение занято и возвращаем 400
         if message[USER][ACCOUNT_NAME] in self.names.keys():
             response = RESPONSE_400
             response[ERROR] = "Имя пользователя уже занято."
@@ -288,8 +293,9 @@ class MessageProcessor(threading.Thread):
                 pass
             self.clients.remove(sock)
             sock.close()
-        # Проверяем что пользователь зарегистрирован на сервере.
-        elif not self.database.check_user(message[USER][ACCOUNT_NAME]):
+        # Проверяем зарегистрирован ли на сервере пользователь пытающийся подключиться.
+        # если нет, то возвращаем 400
+        elif not self.db.check_user_existing(message[USER][ACCOUNT_NAME]):
             response = RESPONSE_400
             response[ERROR] = "Пользователь не зарегистрирован."
             try:
@@ -299,28 +305,35 @@ class MessageProcessor(threading.Thread):
                 pass
             self.clients.remove(sock)
             sock.close()
+
         else:
+            # начинаем процедуру авторизации
+            # код 511 сообщает клиенту об авторизации
             logger.debug("Correct username, starting passwd check.")
-            # Иначе отвечаем 511 и проводим процедуру авторизации
-            # Словарь - заготовка
             message_auth = RESPONSE_511
-            # Набор байтов в hex представлении
+            # Генерируем набор байтов в hex представлении
+            # В словарь байты нельзя, декодируем
+            # Создаём хэш пароля и связки с рандомной строкой, сохраняем серверную версию ключа
             random_str = binascii.hexlify(os.urandom(64))
-            # В словарь байты нельзя, декодируем (json.dumps -> TypeError)
             message_auth[DATA] = random_str.decode("ascii")
-            # Создаём хэш пароля и связки с рандомной строкой, сохраняем
-            # серверную версию ключа
-            hash = hmac.new(self.database.get_hash(message[USER][ACCOUNT_NAME]), random_str, "MD5")
+
+            password_hash = self.db.session.query(Users).filter_by(name=message[USER][ACCOUNT_NAME]).first().password
+            hash = hashlib.pbkdf2_hmac(password_hash, random_str, "MD5")
+            hash = binascii.hexlify(hash)
+            print(hash)
+            # hash = hmac.new(self.db.get_hash(message[USER][ACCOUNT_NAME]), random_str, "MD5")
             digest = hash.digest()
             logger.debug(f"Auth message = {message_auth}")
+
+            # Обмен с клиентом
             try:
-                # Обмен с клиентом
                 send_message(sock, message_auth)
                 ans = get_message(sock)
             except OSError as err:
                 logger.debug("Error in auth, data:", exc_info=err)
                 sock.close()
                 return
+
             client_digest = binascii.a2b_base64(ans[DATA])
             # Если ответ клиента корректный, то сохраняем его в список
             # пользователей.
@@ -333,7 +346,7 @@ class MessageProcessor(threading.Thread):
                     self.remove_client(message[USER][ACCOUNT_NAME])
                 # добавляем пользователя в список активных и если у него изменился открытый ключ
                 # сохраняем новый
-                self.database.user_login(
+                self.db.user_login(
                     message[USER][ACCOUNT_NAME],
                     client_ip,
                     client_port,
