@@ -5,7 +5,7 @@ import os
 from core.core import ClientTransport
 from core.variables import *
 from core.errors_user import ServerError
-from db import Storage
+from db_client import Storage
 
 from PyQt5.QtWidgets import QApplication, QMessageBox
 

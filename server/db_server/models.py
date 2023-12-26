@@ -1,5 +1,5 @@
 # models.py
-from sqlalchemy import Table, Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Table, Column, Integer, String, DateTime, ForeignKey, Text
 from .database import metadata, registry
 import datetime
 
@@ -9,8 +9,9 @@ users_table = Table(
     metadata,
     Column("id", Integer, primary_key=True),
     Column("name", String, unique=True),
-    Column("password", String),
+    Column("password_hash", String),
     Column("last_login", DateTime),
+    Column("pubkey", Text),
 )
 
 
@@ -54,11 +55,12 @@ users_history_table = Table(
 
 # Классы
 class Users:
-    def __init__(self, username, password):
+    def __init__(self, username, password_hash):
         self.id = None
         self.name = username
-        self.password = password
+        self.password_hash = password_hash
         self.last_login = datetime.datetime.now()
+        self.pubkey = None
 
 
 class ActiveUsers:

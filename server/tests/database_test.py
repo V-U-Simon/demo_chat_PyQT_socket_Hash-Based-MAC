@@ -1,7 +1,7 @@
 import pytest
 import datetime
 
-from db import Users, UsersHistory
+from db_server import Users, UsersHistory
 
 
 @pytest.mark.only
@@ -11,7 +11,8 @@ def test_user_login(storage, session):
     ip_address = "127.0.0.1"
     port = 1234
 
-    storage.add_user(username, password)  # Сначала добавляем пользователя
+    new_user = storage.add_user(username, password)  # Сначала добавляем пользователя
+    print(new_user)
     storage.user_login(username=username, ip_address=ip_address, port=port)
     user = session.query(Users).filter_by(name=username).first()
     assert user is not None  # Пользователь должен существовать
@@ -41,7 +42,7 @@ def test_add_user(storage, session):
 def test_check_user_existing(storage, session):
     existing_user = "existing_user"
     non_existing_user = "non_existing_user"
-    storage.add_user(existing_user, password="pass")
+    storage.add_user(existing_user, password="some_hash")
 
     # Проверяем существующего и несуществующего пользователя
     assert storage.check_user_existing(existing_user) is True
@@ -50,8 +51,8 @@ def test_check_user_existing(storage, session):
 
 def test_add_contact(storage, session):
     user1, user2 = "user1", "user2"
-    storage.add_user(user1, password="pass")
-    storage.add_user(user2, password="pass")
+    storage.add_user(user1, password="some_hash")
+    storage.add_user(user2, password="some_hash")
     storage.add_contact(user1, user2)
 
     contacts = storage.get_contacts(user1)
@@ -60,8 +61,8 @@ def test_add_contact(storage, session):
 
 def test_remove_contact(storage, session):
     user1, user2 = "user1", "user2"
-    storage.add_user(user1, password="pass")
-    storage.add_user(user2, password="pass")
+    storage.add_user(user1, password="some_hash")
+    storage.add_user(user2, password="some_hash")
     storage.add_contact(user1, user2)
     storage.remove_contact(user1, user2)
 
@@ -100,8 +101,8 @@ def test_login_history(storage, session):
 
 def test_get_contacts(storage, session):
     user1, user2 = "contact_user1", "contact_user2"
-    storage.add_user(user1, password="pass")
-    storage.add_user(user2, password="pass")
+    storage.add_user(user1, password="some_hash")
+    storage.add_user(user2, password="some_hash")
     storage.add_contact(user1, user2)
     contacts = storage.get_contacts(user1)
 
@@ -112,9 +113,9 @@ def test_get_contacts(storage, session):
 def test_process_message(storage, session):
     # Добавляем пользователей и имитируем их вход
     sender_name, recipient_name = "user1", "user2"
-    sender = storage.add_user(sender_name, password="pass")
+    sender = storage.add_user(sender_name, password="some_hash")
     storage.user_login(sender_name, "127.0.0.1", 1234)
-    recipient = storage.add_user(recipient_name, password="pass")
+    recipient = storage.add_user(recipient_name, password="some_hash")
     storage.user_login(recipient_name, "127.0.0.1", 1235)
 
     # Проверяем, что пользователи существует
@@ -143,9 +144,9 @@ def test_process_message(storage, session):
 
 def test_message_history(storage, session):
     sender, recipient = "msg_user1", "msg_user2"
-    storage.add_user(sender, password="pass")
+    storage.add_user(sender, password="some_hash")
     storage.user_login(sender, "127.0.0.1", 1234)
-    storage.add_user(recipient, password="pass")
+    storage.add_user(recipient, password="some_hash")
     storage.user_login(recipient, "127.0.0.1", 1235)
 
     storage.process_message(sender, recipient)

@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 
-from db import Storage
+from db_server import Storage
 from core.core import MessageProcessor
 
 

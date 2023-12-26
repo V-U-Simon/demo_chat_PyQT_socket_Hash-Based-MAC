@@ -92,13 +92,12 @@ class ClientTransport(threading.Thread, QObject):
 
         logger.debug("Starting auth dialog.")
 
-        # начинаем процедуру авторизации
+        # Запускаем процедуру авторизации
         # Получаем хэш пароля
         passwd_bytes = self.password.encode("utf-8")
         salt = self.username.lower().encode("utf-8")
         passwd_hash = hashlib.pbkdf2_hmac("sha512", passwd_bytes, salt, 10000)
         passwd_hash_string = binascii.hexlify(passwd_hash)
-
         logger.debug(f"Passwd hash ready: {passwd_hash_string}")
 
         # Получаем публичный ключ и декодируем его из байтов
@@ -106,11 +105,7 @@ class ClientTransport(threading.Thread, QObject):
 
         # Авторизируемся на сервере
         with socket_lock:
-            presense = {
-                ACTION: PRESENCE,
-                TIME: time.time(),
-                USER: {ACCOUNT_NAME: self.username, PUBLIC_KEY: pubkey},
-            }
+            presense = {ACTION: PRESENCE, TIME: time.time(), USER: {ACCOUNT_NAME: self.username, PUBLIC_KEY: pubkey}}
             logger.debug(f"Presense message = {presense}")
             # Отправляем серверу приветственное сообщение.
             try:

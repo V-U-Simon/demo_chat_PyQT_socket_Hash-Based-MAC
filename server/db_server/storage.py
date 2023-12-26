@@ -3,8 +3,8 @@ import datetime
 import hashlib
 import binascii
 
-from db import metadata, engine
-from db import Users, ActiveUsers, UsersHistory, LoginHistory, Contacts
+from db_server import metadata, engine
+from db_server import Users, ActiveUsers, UsersHistory, LoginHistory, Contacts
 
 
 class Storage:
@@ -23,22 +23,24 @@ class Storage:
         except:
             return False
 
+    def get_hash(self, username: str):
+        hash_string = self.session.query(Users).filter_by(name=username).first().password_hash
+        return hash_string
+
     def add_user(self, username, password, last_login=None) -> Users:
         # Добавляет нового пользователя в базу данных.
         # Проверяем, существует ли уже такой пользователь
         # Если нет, то добавляем нового пользователя
         # Устанавливаем время последнего входа
-
         try:
             if not self.check_user_existing(username):
+                # Создание пользователя
                 # Создание хеша пароля. В качестве соли будем использовать логин в  нижнем регистре.
                 passwd_bytes = password.encode("utf-8")
                 salt = username.lower().encode("utf-8")
-                passwd_hash = hashlib.pbkdf2_hmac("sha512", passwd_bytes, salt, 10000)
-                password_hash = binascii.hexlify(passwd_hash)
-
-                # Создание пользователя
-                new_user = Users(username, password)
+                hash_bytes = hashlib.pbkdf2_hmac("sha512", passwd_bytes, salt, 10000)
+                hash_string = binascii.hexlify(hash_bytes)
+                new_user = Users(username, password_hash=hash_string)
                 new_user.last_login = last_login if last_login else datetime.datetime.now()
                 self.session.add(new_user)
                 self.session.commit()
@@ -53,9 +55,12 @@ class Storage:
         self.session.query(Users).filter_by(name=username).delete()
         self.session.commit()
 
-    def user_login(self, username, ip_address, port) -> None:
+    def user_login(self, username, ip_address, port, pubkey="") -> None:
         # Функция выполняющаяся при входе пользователя, записывает в базу факт входа
         # Запрос в таблицу пользователей на наличие там пользователя с таким именем
+        # Если имя пользователя уже присутствует в таблице, обновляем время последнего входа
+        # и проверяем корректность ключа. Если клиент прислал новый ключ,
+        # сохраняем его.
         # Если имя пользователя уже присутствует в таблице, обновляем время последнего входа
         # Если нет, то создаём нового пользователя
         # Теперь можно создать запись в таблицу активных пользователей о факте входа.
@@ -63,6 +68,8 @@ class Storage:
 
         user = self.session.query(Users).filter_by(name=username).first()
         user.last_login = datetime.datetime.now()
+        if user.pubkey != pubkey:
+            user.pubkey = pubkey
 
         new_active_user = ActiveUsers(user.id, ip_address, port, datetime.datetime.now())
         self.session.add(new_active_user)
@@ -82,6 +89,11 @@ class Storage:
         user = self.session.query(Users).filter_by(name=username).first()
         self.session.query(ActiveUsers).filter_by(user=user.id).delete()
         self.session.commit()
+
+    def get_pubkey(self, name):
+        """Метод получения публичного ключа пользователя."""
+        user = self.session.query(Users).filter_by(name=name).first()
+        return user.pubkey
 
     def process_message(self, sender_name: str, recipient_name: str) -> None:
         # Функция фиксирует передачу сообщения и делает соответствующие отметки в БД

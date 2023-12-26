@@ -1,8 +1,8 @@
 from sqlalchemy.orm import sessionmaker
 import datetime
 
-from db.database import metadata, engine
-from db.models import MessageHistory, Contacts, KnownUsers
+from db_client.database import metadata, engine
+from db_client.models import MessageHistory, Contacts, KnownUsers
 
 
 class Storage:
@@ -58,6 +58,11 @@ class Storage:
             return True
         else:
             return False
+
+    def contacts_clear(self):
+        """Метод, очищающий таблицу со списком контактов."""
+        self.session.query(Contacts).delete()
+        self.session.commit()
 
     # Функция возвращает историю переписки
     def get_history(self, from_who=None, to_who=None):

@@ -1,8 +1,8 @@
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from server.db import metadata
-from server.db.storage import Storage
+from server.db_server import metadata
+from server.db_server.storage import Storage
 
 
 # Фикстура для настройки тестовой базы данных

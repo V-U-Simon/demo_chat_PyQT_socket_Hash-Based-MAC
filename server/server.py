@@ -7,7 +7,7 @@ import configparser
 from core.core import MessageProcessor
 from core.utils import *
 from core.variables import *
-from db import Storage
+from db_server import Storage
 
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt

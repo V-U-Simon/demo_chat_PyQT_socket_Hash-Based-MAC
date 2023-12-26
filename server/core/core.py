@@ -14,8 +14,8 @@ import binascii
 import os
 import sys
 
-from db import Storage
-from db.models import Users
+from db_server import Storage
+from db_server.models import Users
 
 sys.path.append("../")
 
@@ -280,9 +280,15 @@ class MessageProcessor(threading.Thread):
     def autorize_user(self, message, sock):
         """Метод реализующий авторизацию пользователей."""
         logger.debug(f"Start auth process for {message[USER]}")
+
+        username = message[USER][ACCOUNT_NAME]
+        pubkey = message[USER][PUBLIC_KEY]
+        print(self.db.check_user_existing(username))
+        print(self.db.session.query(Users).filter_by(name=username).first())
+
         # Проверка взаимодействует ли данный пользователь с сервером в настоящий момент
         # если да, то подлкючение занято и возвращаем 400
-        if message[USER][ACCOUNT_NAME] in self.names.keys():
+        if username in self.names.keys():
             response = RESPONSE_400
             response[ERROR] = "Имя пользователя уже занято."
             try:
@@ -295,7 +301,7 @@ class MessageProcessor(threading.Thread):
             sock.close()
         # Проверяем зарегистрирован ли на сервере пользователь пытающийся подключиться.
         # если нет, то возвращаем 400
-        elif not self.db.check_user_existing(message[USER][ACCOUNT_NAME]):
+        elif not self.db.check_user_existing(username):
             response = RESPONSE_400
             response[ERROR] = "Пользователь не зарегистрирован."
             try:
@@ -314,43 +320,41 @@ class MessageProcessor(threading.Thread):
             # Генерируем набор байтов в hex представлении
             # В словарь байты нельзя, декодируем
             # Создаём хэш пароля и связки с рандомной строкой, сохраняем серверную версию ключа
-            random_str = binascii.hexlify(os.urandom(64))
-            message_auth[DATA] = random_str.decode("ascii")
-
-            password_hash = self.db.session.query(Users).filter_by(name=message[USER][ACCOUNT_NAME]).first().password
-            hash = hashlib.pbkdf2_hmac(password_hash, random_str, "MD5")
-            hash = binascii.hexlify(hash)
-            print(hash)
-            # hash = hmac.new(self.db.get_hash(message[USER][ACCOUNT_NAME]), random_str, "MD5")
-            digest = hash.digest()
-            logger.debug(f"Auth message = {message_auth}")
+            random_str: bytes = binascii.hexlify(os.urandom(64))
+            message_auth[DATA]: str = random_str.decode("ascii")
 
             # Обмен с клиентом
             try:
+                print(message_auth[DATA])
                 send_message(sock, message_auth)
-                ans = get_message(sock)
+                answer = get_message(sock)
             except OSError as err:
                 logger.debug("Error in auth, data:", exc_info=err)
                 sock.close()
                 return
 
-            client_digest = binascii.a2b_base64(ans[DATA])
+            client_digest = binascii.a2b_base64(answer[DATA])
             # Если ответ клиента корректный, то сохраняем его в список
             # пользователей.
-            if RESPONSE in ans and ans[RESPONSE] == 511 and hmac.compare_digest(digest, client_digest):
-                self.names[message[USER][ACCOUNT_NAME]] = sock
+
+            hash = hmac.new(self.db.get_hash(username), random_str, "MD5")
+            digest = hash.digest()
+            logger.debug(f"Auth message = {message_auth}")
+
+            if RESPONSE in answer and answer[RESPONSE] == 511 and hmac.compare_digest(digest, client_digest):
+                self.names[username] = sock
                 client_ip, client_port = sock.getpeername()
                 try:
                     send_message(sock, RESPONSE_200)
                 except OSError:
-                    self.remove_client(message[USER][ACCOUNT_NAME])
+                    self.remove_client(username)
                 # добавляем пользователя в список активных и если у него изменился открытый ключ
                 # сохраняем новый
                 self.db.user_login(
-                    message[USER][ACCOUNT_NAME],
+                    username,
                     client_ip,
                     client_port,
-                    message[USER][PUBLIC_KEY],
+                    pubkey,
                 )
             else:
                 response = RESPONSE_400
