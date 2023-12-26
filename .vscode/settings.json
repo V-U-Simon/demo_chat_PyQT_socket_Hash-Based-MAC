@@ -1,6 +1,6 @@
 {
   "terminal.integrated.env.osx": {
-    "PYTHONPATH": "${workspaceFolder}/messenger/"
+    "PYTHONPATH": "${workspaceFolder}/server"
   },
   "python.testing.pytestArgs": ["messenger"],
   "python.testing.unittestEnabled": false,

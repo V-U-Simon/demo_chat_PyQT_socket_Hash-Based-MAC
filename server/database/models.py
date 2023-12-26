@@ -9,6 +9,7 @@ users_table = Table(
     metadata,
     Column("id", Integer, primary_key=True),
     Column("name", String, unique=True),
+    Column("password", String),
     Column("last_login", DateTime),
 )
 
@@ -53,9 +54,10 @@ users_history_table = Table(
 
 # Классы
 class Users:
-    def __init__(self, username):
+    def __init__(self, username, password):
         self.id = None
         self.name = username
+        self.password = password
         self.last_login = datetime.datetime.now()
 
 

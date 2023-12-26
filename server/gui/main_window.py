@@ -1,6 +1,8 @@
 from PyQt5.QtWidgets import QMainWindow, QAction, qApp, QApplication, QLabel, QTableView
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtCore import QTimer
+from core.core import MessageProcessor
+from database import storage
 
 # from stat_window import StatWindow
 from .stat_window import StatWindow
@@ -12,14 +14,12 @@ from .remove_user import DelUserDialog
 class MainWindow(QMainWindow):
     """Класс - основное окно сервера."""
 
-    def __init__(self, database, server, config):
-        # Конструктор предка
+    def __init__(self, db: storage, server: MessageProcessor, config):
         super().__init__()
 
         # База данных сервера
-        self.database = database
-
-        self.server_thread = server
+        self.database = db
+        self.server_thread: MessageProcessor = server
         self.config = config
 
         # Ярлык выхода
@@ -80,8 +80,8 @@ class MainWindow(QMainWindow):
         self.refresh_button.triggered.connect(self.create_users_model)
         self.show_history_button.triggered.connect(self.show_statistics)
         self.config_btn.triggered.connect(self.server_config)
-        self.register_btn.triggered.connect(self.reg_user)
-        self.remove_btn.triggered.connect(self.rem_user)
+        self.register_btn.triggered.connect(self.register_user)
+        self.remove_btn.triggered.connect(self.remove_user)
 
         # Последним параметром отображаем окно.
         self.show()
@@ -90,9 +90,7 @@ class MainWindow(QMainWindow):
         """Метод заполняющий таблицу активных пользователей."""
         list_users = self.database.active_users_list()
         list = QStandardItemModel()
-        list.setHorizontalHeaderLabels(
-            ["Имя Клиента", "IP Адрес", "Порт", "Время подключения"]
-        )
+        list.setHorizontalHeaderLabels(["Имя Клиента", "IP Адрес", "Порт", "Время подключения"])
         for row in list_users:
             user, ip, port, time = row
             user = QStandardItem(user)
@@ -122,13 +120,13 @@ class MainWindow(QMainWindow):
         # Создаём окно и заносим в него текущие параметры
         config_window = ConfigWindow(self.config)
 
-    def reg_user(self):
+    def register_user(self):
         """Метод создающий окно регистрации пользователя."""
         global reg_window
         reg_window = RegisterUser(self.database, self.server_thread)
         reg_window.show()
 
-    def rem_user(self):
+    def remove_user(self):
         """Метод создающий окно удаления пользователя."""
         global rem_window
         rem_window = DelUserDialog(self.database, self.server_thread)

@@ -1,7 +1,7 @@
 from common.decos import login_required
 from common.utils import send_message, get_message
 from common.variables import *
-from common.descriptors import Port
+from common.decos import Port
 from common.metaclasses import ServerMaker
 import threading
 import logging
@@ -90,13 +90,9 @@ class MessageProcessor(threading.Thread):
             if recv_data_lst:
                 for client_with_message in recv_data_lst:
                     try:
-                        self.process_client_message(
-                            get_message(client_with_message), client_with_message
-                        )
+                        self.process_client_message(get_message(client_with_message), client_with_message)
                     except (OSError, json.JSONDecodeError, TypeError) as err:
-                        logger.debug(
-                            f"Getting data from client exception.", exc_info=err
-                        )
+                        logger.debug(f"Getting data from client exception.", exc_info=err)
                         self.remove_client(client_with_message)
 
     def remove_client(self, client):
@@ -131,10 +127,7 @@ class MessageProcessor(threading.Thread):
         """
         Метод отправки сообщения клиенту.
         """
-        if (
-            message[DESTINATION] in self.names
-            and self.names[message[DESTINATION]] in self.listen_sockets
-        ):
+        if message[DESTINATION] in self.names and self.names[message[DESTINATION]] in self.listen_sockets:
             try:
                 send_message(self.names[message[DESTINATION]], message)
                 logger.info(
@@ -142,10 +135,7 @@ class MessageProcessor(threading.Thread):
                 )
             except OSError:
                 self.remove_client(message[DESTINATION])
-        elif (
-            message[DESTINATION] in self.names
-            and self.names[message[DESTINATION]] not in self.listen_sockets
-        ):
+        elif message[DESTINATION] in self.names and self.names[message[DESTINATION]] not in self.listen_sockets:
             logger.error(
                 f"Связь с клиентом {message[DESTINATION]} была потеряна. Соединение закрыто, доставка невозможна."
             )
@@ -160,12 +150,7 @@ class MessageProcessor(threading.Thread):
         """Метод обработчик поступающих сообщений."""
         logger.debug(f"Разбор сообщения от клиента : {message}")
         # Если это сообщение о присутствии, принимаем и отвечаем
-        if (
-            ACTION in message
-            and message[ACTION] == PRESENCE
-            and TIME in message
-            and USER in message
-        ):
+        if ACTION in message and message[ACTION] == PRESENCE and TIME in message and USER in message:
             # Если сообщение о присутствии то вызываем функцию авторизации.
             self.autorize_user(message, client)
 
@@ -261,11 +246,7 @@ class MessageProcessor(threading.Thread):
                 self.remove_client(client)
 
         # Если это запрос публичного ключа пользователя
-        elif (
-            ACTION in message
-            and message[ACTION] == PUBLIC_KEY_REQUEST
-            and ACCOUNT_NAME in message
-        ):
+        elif ACTION in message and message[ACTION] == PUBLIC_KEY_REQUEST and ACCOUNT_NAME in message:
             response = RESPONSE_511
             response[DATA] = self.database.get_pubkey(message[ACCOUNT_NAME])
             # может быть, что ключа ещё нет (пользователь никогда не логинился,
@@ -329,9 +310,7 @@ class MessageProcessor(threading.Thread):
             message_auth[DATA] = random_str.decode("ascii")
             # Создаём хэш пароля и связки с рандомной строкой, сохраняем
             # серверную версию ключа
-            hash = hmac.new(
-                self.database.get_hash(message[USER][ACCOUNT_NAME]), random_str, "MD5"
-            )
+            hash = hmac.new(self.database.get_hash(message[USER][ACCOUNT_NAME]), random_str, "MD5")
             digest = hash.digest()
             logger.debug(f"Auth message = {message_auth}")
             try:
@@ -345,11 +324,7 @@ class MessageProcessor(threading.Thread):
             client_digest = binascii.a2b_base64(ans[DATA])
             # Если ответ клиента корректный, то сохраняем его в список
             # пользователей.
-            if (
-                RESPONSE in ans
-                and ans[RESPONSE] == 511
-                and hmac.compare_digest(digest, client_digest)
-            ):
+            if RESPONSE in ans and ans[RESPONSE] == 511 and hmac.compare_digest(digest, client_digest):
                 self.names[message[USER][ACCOUNT_NAME]] = sock
                 client_ip, client_port = sock.getpeername()
                 try:

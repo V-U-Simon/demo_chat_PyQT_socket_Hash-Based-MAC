@@ -1,8 +1,10 @@
 from sqlalchemy.orm import sessionmaker
 import datetime
+import hashlib
+import binascii
 
-from server.database import metadata, engine
-from server.database import (
+from database import metadata, engine
+from database import (
     Users,
     ActiveUsers,
     UsersHistory,
@@ -11,8 +13,8 @@ from server.database import (
 )
 
 
-class ServerStorage:
-    def __init__(self, engine):
+class Storage:
+    def __init__(self, engine=engine):
         metadata.create_all(engine)  # Инициализация базы данных и создание таблиц
         self.session = sessionmaker(bind=engine)()  # Создание сессии
 
@@ -27,7 +29,7 @@ class ServerStorage:
         except:
             return False
 
-    def add_user(self, username, last_login=None) -> Users:
+    def add_user(self, username, password, last_login=None) -> Users:
         # Добавляет нового пользователя в базу данных.
         # Проверяем, существует ли уже такой пользователь
         # Если нет, то добавляем нового пользователя
@@ -35,7 +37,14 @@ class ServerStorage:
 
         try:
             if not self.check_user_existing(username):
-                new_user = Users(username)
+                # Создание хеша пароля. В качестве соли будем использовать логин в  нижнем регистре.
+                passwd_bytes = password.encode("utf-8")
+                salt = username.lower().encode("utf-8")
+                passwd_hash = hashlib.pbkdf2_hmac("sha512", passwd_bytes, salt, 10000)
+                password_hash = binascii.hexlify(passwd_hash)
+
+                # Создание пользователя
+                new_user = Users(username, password)
                 new_user.last_login = last_login if last_login else datetime.datetime.now()
                 self.session.add(new_user)
                 self.session.commit()
@@ -45,6 +54,10 @@ class ServerStorage:
             print(f"Ошибка добавления пользователя {username}: {e}")
             self.session.rollback()  # Откатываем изменения в случае ошибки
             return None  # В случае ошибки
+
+    def remove_user(self, username) -> None:
+        self.session.query(Users).filter_by(name=username).delete()
+        self.session.commit()
 
     def user_login(self, username, ip_address, port) -> None:
         # Функция выполняющаяся при входе пользователя, записывает в базу факт входа

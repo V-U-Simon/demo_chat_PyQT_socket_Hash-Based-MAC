@@ -7,17 +7,18 @@ from PyQt5.QtWidgets import (
     QMessageBox,
 )
 from PyQt5.QtCore import Qt
-import hashlib
-import binascii
+
+from database import Storage
+from core.core import MessageProcessor
 
 
 class RegisterUser(QDialog):
     """Класс диалог регистрации пользователя на сервере."""
 
-    def __init__(self, database, server):
+    def __init__(self, db: Storage, server: MessageProcessor):
         super().__init__()
 
-        self.database = database
+        self.db = db
         self.server = server
 
         self.setWindowTitle("Регистрация")
@@ -66,42 +67,35 @@ class RegisterUser(QDialog):
         """
         Метод проверки правильности ввода и сохранения в базу нового пользователя.
         """
-        if not self.client_name.text():
+        username = self.client_name.text()
+        password = self.client_passwd.text()
+        confirm_password = self.client_conf.text()
+
+        if not username:
             self.messages.critical(self, "Ошибка", "Не указано имя пользователя.")
             return
-        elif self.client_passwd.text() != self.client_conf.text():
+        elif password != confirm_password:
             self.messages.critical(self, "Ошибка", "Введённые пароли не совпадают.")
             return
-        elif self.database.check_user(self.client_name.text()):
+        elif self.db.check_user_existing(username):
             self.messages.critical(self, "Ошибка", "Пользователь уже существует.")
             return
         else:
-            # Генерируем хэш пароля, в качестве соли будем использовать логин в
-            # нижнем регистре.
-            passwd_bytes = self.client_passwd.text().encode("utf-8")
-            salt = self.client_name.text().lower().encode("utf-8")
-            passwd_hash = hashlib.pbkdf2_hmac("sha512", passwd_bytes, salt, 10000)
+            new_user = self.db.add_user(username, password)
+            if not new_user:
+                self.messages.critical(self, "Ошибка", "Ошибка при создании пользователя.")
+                return
 
-            self.database.add_user(
-                self.client_name.text(), binascii.hexlify(passwd_hash)
-            )
-            self.messages.information(
-                self, "Успех", "Пользователь успешно зарегистрирован."
-            )
             # Рассылаем клиентам сообщение о необходимости обновить справочники
+            self.messages.information(self, "Успех", "Пользователь успешно зарегистрирован.")
             self.server.service_update_lists()
             self.close()
 
 
 if __name__ == "__main__":
     app = QApplication([])
-
-    # from database import ServerStorage
-    from server_database import ServerStorage
-
-    database = ServerStorage("../server_test_database.db3")
-    from core import MessageProcessor
-
+    database = Storage()
     server = MessageProcessor("127.0.0.1", 7777, database)
+
     dial = RegisterUser(database, server)
     app.exec_()

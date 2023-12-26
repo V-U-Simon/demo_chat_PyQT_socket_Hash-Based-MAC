@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from server.database import metadata
-from server.database.storage import ServerStorage
+from server.database.storage import Storage
 
 
 # Фикстура для настройки тестовой базы данных
@@ -28,4 +28,4 @@ def session(test_engine):
 # Фикстура для ServerStorage
 @pytest.fixture(scope="function")
 def storage(session):
-    return ServerStorage(session.bind)
+    return Storage(session.bind)

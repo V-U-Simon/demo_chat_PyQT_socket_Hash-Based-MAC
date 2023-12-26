@@ -1,22 +1,26 @@
 import pytest
 import datetime
 
-from server.database import Users, UsersHistory
+from database import Users, UsersHistory
 
 
+@pytest.mark.only
 def test_user_login(storage, session):
-    data = {"username": "test_user", "ip_address": "127.0.0.1", "port": 1234}
+    username = "test_user"
+    password = "pass"
+    ip_address = "127.0.0.1"
+    port = 1234
 
-    storage.add_user(data["username"])  # Сначала добавляем пользователя
-    storage.user_login(**data)
-    user = session.query(Users).filter_by(name=data["username"]).first()
+    storage.add_user(username, password)  # Сначала добавляем пользователя
+    storage.user_login(username=username, ip_address=ip_address, port=port)
+    user = session.query(Users).filter_by(name=username).first()
     assert user is not None  # Пользователь должен существовать
-    assert user.name == data["username"]  # Имя должно соответствовать
+    assert user.name == username  # Имя должно соответствовать
 
 
 def test_user_logout(storage, session):
     username = "user_for_logout"
-    storage.add_user(username)  # Сначала добавляем пользователя
+    storage.add_user(username, password="pass")  # Сначала добавляем пользователя
     storage.user_login(username, "127.0.0.1", 1234)  # Пользователь входит
     storage.user_logout(username)  # Пользователь выходит
 
@@ -27,7 +31,7 @@ def test_user_logout(storage, session):
 
 def test_add_user(storage, session):
     username = "user_to_add"
-    new_user = storage.add_user(username)
+    new_user = storage.add_user(username, password="pass")
 
     # Проверяем, что пользователь действительно добавлен в базу
     assert new_user.id == session.query(Users).filter_by(name=username).first().id
@@ -37,7 +41,7 @@ def test_add_user(storage, session):
 def test_check_user_existing(storage, session):
     existing_user = "existing_user"
     non_existing_user = "non_existing_user"
-    storage.add_user(existing_user)
+    storage.add_user(existing_user, password="pass")
 
     # Проверяем существующего и несуществующего пользователя
     assert storage.check_user_existing(existing_user) is True
@@ -46,8 +50,8 @@ def test_check_user_existing(storage, session):
 
 def test_add_contact(storage, session):
     user1, user2 = "user1", "user2"
-    storage.add_user(user1)
-    storage.add_user(user2)
+    storage.add_user(user1, password="pass")
+    storage.add_user(user2, password="pass")
     storage.add_contact(user1, user2)
 
     contacts = storage.get_contacts(user1)
@@ -56,8 +60,8 @@ def test_add_contact(storage, session):
 
 def test_remove_contact(storage, session):
     user1, user2 = "user1", "user2"
-    storage.add_user(user1)
-    storage.add_user(user2)
+    storage.add_user(user1, password="pass")
+    storage.add_user(user2, password="pass")
     storage.add_contact(user1, user2)
     storage.remove_contact(user1, user2)
 
@@ -67,7 +71,7 @@ def test_remove_contact(storage, session):
 
 def test_users_list(storage, session):
     username = "new_user"
-    storage.add_user(username)
+    storage.add_user(username, password="pass")
     users = storage.users_list()
 
     # Проверяем, что новый пользователь появился в списке пользователей
@@ -76,7 +80,7 @@ def test_users_list(storage, session):
 
 def test_active_users_list(storage, session):
     username = "active_user"
-    storage.add_user(username)
+    storage.add_user(username, password="pass")
     storage.user_login(username, "127.0.0.1", 1234)
     active_users = storage.active_users_list()
 
@@ -86,7 +90,7 @@ def test_active_users_list(storage, session):
 
 def test_login_history(storage, session):
     username = "user_with_history"
-    storage.add_user(username)
+    storage.add_user(username, password="pass")
     storage.user_login(username, "127.0.0.1", 1234)
 
     history = storage.login_history(username)
@@ -96,8 +100,8 @@ def test_login_history(storage, session):
 
 def test_get_contacts(storage, session):
     user1, user2 = "contact_user1", "contact_user2"
-    storage.add_user(user1)
-    storage.add_user(user2)
+    storage.add_user(user1, password="pass")
+    storage.add_user(user2, password="pass")
     storage.add_contact(user1, user2)
     contacts = storage.get_contacts(user1)
 
@@ -105,13 +109,12 @@ def test_get_contacts(storage, session):
     assert user2 in contacts
 
 
-@pytest.mark.only
 def test_process_message(storage, session):
     # Добавляем пользователей и имитируем их вход
     sender_name, recipient_name = "user1", "user2"
-    sender = storage.add_user(sender_name)
+    sender = storage.add_user(sender_name, password="pass")
     storage.user_login(sender_name, "127.0.0.1", 1234)
-    recipient = storage.add_user(recipient_name)
+    recipient = storage.add_user(recipient_name, password="pass")
     storage.user_login(recipient_name, "127.0.0.1", 1235)
 
     # Проверяем, что пользователи существует
@@ -140,9 +143,9 @@ def test_process_message(storage, session):
 
 def test_message_history(storage, session):
     sender, recipient = "msg_user1", "msg_user2"
-    storage.add_user(sender)
+    storage.add_user(sender, password="pass")
     storage.user_login(sender, "127.0.0.1", 1234)
-    storage.add_user(recipient)
+    storage.add_user(recipient, password="pass")
     storage.user_login(recipient, "127.0.0.1", 1235)
 
     storage.process_message(sender, recipient)

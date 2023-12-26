@@ -1,21 +1,26 @@
 import sys
 import os
 import argparse
-import logging
+
 import configparser
-import logs.server_logs_config
+
 
 from common.variables import *
 from common.utils import *
-from common.decos import log
-from server.core import MessageProcessor
-from server.server_database import ServerStorage
-from server.main_window import MainWindow
+
+
+from core.core import MessageProcessor
+from database import Storage
+from gui.main_window import MainWindow
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
 
+from logs.logger import logger, log
+
 # Инициализация логирования сервера.
-logger = logging.getLogger("server")
+# from common.decos import log
+# import logs.logger_config
+# logger = logging.getLogger("server")
 
 
 @log
@@ -66,14 +71,10 @@ def main():
     )
 
     # Инициализация базы данных
-    database = ServerStorage(
-        os.path.join(
-            config["SETTINGS"]["Database_path"], config["SETTINGS"]["Database_file"]
-        )
-    )
+    db = Storage()
 
     # Создание экземпляра класса - сервера и его запуск:
-    server = MessageProcessor(listen_address, listen_port, database)
+    server = MessageProcessor(listen_address, listen_port, db)
     server.daemon = True
     server.start()
 
@@ -93,7 +94,7 @@ def main():
         # Создаём графическое окуружение для сервера:
         server_app = QApplication(sys.argv)
         server_app.setAttribute(Qt.AA_DisableWindowContextHelpButton)
-        main_window = MainWindow(database, server, config)
+        main_window = MainWindow(db, server, config)
 
         # Запускаем GUI
         server_app.exec_()

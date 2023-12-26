@@ -22,4 +22,9 @@ registry = registry()  # создаем экземпляр registry
 #     connect_args={"check_same_thread": False},
 # )
 
+
+# Варианты путей к БД
+# "sqlite:///db_server.db3",
+# f"sqlite:///{path}",
 # "db_test_server.db3"
+# os.path.join(config["SETTINGS"]["Database_path"], config["SETTINGS"]["Database_file"])
