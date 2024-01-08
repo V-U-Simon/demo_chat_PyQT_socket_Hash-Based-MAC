@@ -14,6 +14,18 @@ from core.variables import *
 # принимает байты выдаёт словарь, если приняточто-то другое отдаёт ошибку типа
 @log
 def get_message(client):
+    """Summary line.
+
+    Extended description of function.
+
+    Args:
+        arg1 (int): Description of arg1
+        arg2 (str): Description of arg2
+
+    Returns:
+        bool: Description of return value
+
+    """
     encoded_response = client.recv(MAX_PACKAGE_LENGTH)
     json_response = encoded_response.decode(ENCODING)
     response = json.loads(json_response)

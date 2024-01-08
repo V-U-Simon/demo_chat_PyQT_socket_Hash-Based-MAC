@@ -10,6 +10,9 @@ import subprocess
 import sys
 from time import sleep
 
+from messeghost8740 import server
+from messenger8740 import client
+
 
 PYTHON_PATH = sys.executable
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -18,9 +21,9 @@ BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 def get_subprocess(file_with_args):
     sleep(0.2)
     file_full_path = f"{PYTHON_PATH} {BASE_PATH}/{file_with_args}"
-    args = ["gnome-terminal", "--disable-factory",
-            "--", "bash", "-c", file_full_path]
+    args = ["gnome-terminal", "--disable-factory", "--", "bash", "-c", file_full_path]
     return subprocess.Popen(args, preexec_fn=os.setpgrp)
+
 
 if __name__ == "__main__":
     process = []

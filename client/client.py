@@ -1,5 +1,6 @@
 import argparse
 import sys
+from pathlib import Path
 import os
 
 from core.core import ClientTransport
@@ -75,9 +76,12 @@ def main():
         f" имя пользователя: {client_name}"
     )
 
-    # Загружаем ключи с файла, если же файла нет, то генерируем новую пару.
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    key_file = os.path.join(dir_path, f"{client_name}.key")
+    dir_path = Path(__file__).parent
+    keys_dir = dir_path / "keys"
+    key_file = keys_dir / f"{client_name}.key"
+
+    # dir_path = os.path.dirname(os.path.realpath(__file__))
+    # key_file = os.path.join(dir_path, f"{client_name}.key")
     if not os.path.exists(key_file):
         keys = RSA.generate(2048, os.urandom)
         with open(key_file, "wb") as key:
@@ -93,7 +97,7 @@ def main():
     from sqlalchemy import create_engine
 
     engine = create_engine(
-        f"sqlite:///db_client_{client_name}.db3",
+        f"sqlite:///db_client/{client_name}.db3",
         echo=False,
     )
     db = Storage(engine)

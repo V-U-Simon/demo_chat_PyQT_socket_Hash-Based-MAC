@@ -1,12 +1,12 @@
 from sqlalchemy.orm import sessionmaker
 import datetime
 
-from db_client.database import metadata, engine
+from db_client.database import metadata
 from db_client.models import MessageHistory, Contacts, KnownUsers
 
 
 class Storage:
-    def __init__(self, engine=engine):
+    def __init__(self, engine):
         metadata.create_all(engine)  # Инициализация базы данных и создание таблиц
         self.session = sessionmaker(bind=engine)()  # Создание сессии
 
