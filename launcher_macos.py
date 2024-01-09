@@ -33,6 +33,7 @@ if __name__ == "__main__":
             break
         elif action == "s":
             process.append(get_subprocess("./server/server.py"))
+            sleep(1)
 
             for i in range(2):
                 process.append(get_subprocess(f"./client/client.py -n test{i+1}"))

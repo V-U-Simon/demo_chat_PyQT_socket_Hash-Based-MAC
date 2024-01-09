@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "pyqt-chat-8740"
+name = "pyqtchat8741"
 packages = [{ include = "client" }, { include = "server" }]
 version = "0.1.0"
 description = ""
 authors = ["Viktor Simon <V-U-Simon@yandex.ru>"]
-# readme = "README.md"
+readme = "README.md"
 
 
 [tool.poetry.dependencies]

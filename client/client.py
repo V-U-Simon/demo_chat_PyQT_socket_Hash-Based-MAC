@@ -97,7 +97,7 @@ def main():
     from sqlalchemy import create_engine
 
     engine = create_engine(
-        f"sqlite:///db_client/{client_name}.db3",
+        f"sqlite:///db/client_{client_name}.db3",
         echo=False,
     )
     db = Storage(engine)
