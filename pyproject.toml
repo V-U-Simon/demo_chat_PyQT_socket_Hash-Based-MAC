@@ -1,10 +1,22 @@
 [tool.poetry]
 name = "pyqtchat8741"
-packages = [{ include = "client" }, { include = "server" }]
-version = "0.1.0"
+version = "0.1.18"
 description = ""
 authors = ["Viktor Simon <V-U-Simon@yandex.ru>"]
 readme = "README.md"
+packages = [
+    { include = "pyqtchat8741" },
+    { include = "pyqtchat8741/server" },
+    { include = "pyqtchat8741/client" },
+]
+
+include = ["./db", "./**/logs/*", "./**/keys/*"]
+
+
+[tool.poetry.scripts]
+pyqtchat8741_server = 'pyqtchat8741.server.server:main'
+pyqtchat8741_client = 'pyqtchat8741.client.client:main'
+pyqtchat8741_start = 'pyqtchat8741.launcher_macos:main'
 
 
 [tool.poetry.dependencies]
