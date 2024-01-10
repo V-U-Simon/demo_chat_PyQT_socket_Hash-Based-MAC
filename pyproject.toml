@@ -3,7 +3,7 @@ name = "pyqtchat8741"
 version = "0.1.18"
 description = ""
 authors = ["Viktor Simon <V-U-Simon@yandex.ru>"]
-readme = "README.md"
+
 packages = [
     { include = "pyqtchat8741" },
     { include = "pyqtchat8741/server" },
