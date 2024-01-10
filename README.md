@@ -6,6 +6,8 @@ A project that implements chat using sockets. Hash-Based Message Authentication 
 
 (RU) Проект реализующий чат с использованием сокетов. При авторизации пользователя используется "Hash-Based Message Authentication Code".
 
+![example](example_2.gif)
+
 ## Quick start
 
 ```bash
@@ -29,3 +31,5 @@ pyqtchat8741_start
 pyqtchat8741_server # run server
 pyqtchat8741_client # run client
 ```
+
+![example](example_1.gif)
